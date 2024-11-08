@@ -47,7 +47,6 @@ describe("GFTCoinICO", () => {
             const investor2Balance = await gftCoinICO.balanceOf(investor2.address)
             expect(investor2Balance).to.be.greaterThan(0)
 
-
         });
 
         it("Should revert if investment is below min or above max range", async () => {
@@ -65,12 +64,17 @@ describe("GFTCoinICO", () => {
             );
         });
 
-        it.skip("Should revert if hardCap is exceeded (using ICOhardCapReached)", async () => {
+        it("Should revert if hardCap is exceeded (using ICOhardCapReached)", async () => {
             const { gftCoinICO, investor1 } = await loadFixture(deployGFTCoinICOFixture);
             const hardCap = await gftCoinICO.hardCap();
+            const investmentAmount = hre.ethers.parseEther("5");
 
-            expect.fail("Make it yourself");
-        });
+            for (let i = 0; i < 60; i++) {
+                await gftCoinICO.connect(investor1).invest({ value: investmentAmount});
+            }
+            await expect(gftCoinICO.connect(investor1).invest({ value: investmentAmount }))
+                .to.be.revertedWithCustomError(gftCoinICO, "ICOhardCapReached");
+        });        
     });
 
     describe("Event Emissions", () => {
@@ -85,8 +89,13 @@ describe("GFTCoinICO", () => {
     });
 
     describe("Token Transfer Restrictions", () => {
-        it.skip("Should revert with TradeDoesNotStart error if transfer is attempted before tradeStart", async () => {
+        it("Should revert with TradeDoesNotStart error if transfer is attempted before tradeStart", async () => {
             const { gftCoinICO, investor1, investor2 } = await loadFixture(deployGFTCoinICOFixture);
+            const maxInvestment = hre.ethers.parseEther("5");
+
+            await expect(gftCoinICO.connect(investor1).invest({ value: maxInvestment }));
+            await expect(gftCoinICO.connect(investor1).transfer(investor2.address, 5))
+                .to.be.revertedWithCustomError(gftCoinICO, "TradeDoesNotStart");
         });
 
         it("Should allow transfer of tokens after tradeStart", async () => {
