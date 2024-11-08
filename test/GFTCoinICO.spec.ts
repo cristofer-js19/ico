@@ -47,6 +47,7 @@ describe("GFTCoinICO", () => {
             const investor2Balance = await gftCoinICO.balanceOf(investor2.address)
             expect(investor2Balance).to.be.greaterThan(0)
 
+            
         });
 
         it("Should revert if investment is below min or above max range", async () => {
